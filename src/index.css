@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: 'Nunito', sans-serif;
+  color: #111;
+  -webkit-font-smoothing: antialiased;
+  background-color: #f0f0f0; /* Fallback */
+}
+
+/* IO Game Style Elements */
+.io-panel {
+  background: white;
+  border: 4px solid #1f2937;
+  border-radius: 24px;
+  box-shadow: 0px 8px 0px #1f2937;
+  padding: 30px;
+  color: #1f2937;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Base button override (Mantine buttons injected with IO class) */
+.io-button {
+  border: 3px solid #1f2937 !important;
+  border-radius: 16px !important;
+  box-shadow: 0px 6px 0px #1f2937 !important;
+  transition: all 0.1s ease !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.io-button:hover {
+  transform: translateY(2px) !important;
+  box-shadow: 0px 4px 0px #1f2937 !important;
+}
+
+.io-button:active {
+  transform: translateY(6px) !important;
+  box-shadow: 0px 0px 0px #1f2937 !important;
+}
+
+/* Inputs */
+.io-input input {
+  border: 3px solid #1f2937 !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0px 3px 6px rgba(0,0,0,0.1) !important;
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* Dynamic pulse */
+.pulse-text {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Animations */
+.animated-panel {
+  animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsiveness Heavy Scaling */
+@media (max-width: 768px) {
+  .io-panel {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  
+  h1 {
+     font-size: 2.5rem !important;
+  }
+  
+  h2 {
+     font-size: 1.6rem !important;
+  }
+
+  h3 {
+     font-size: 1.2rem !important;
+  }
+
+  .io-input input {
+     font-size: 1.2rem !important;
+  }
+
+  .mantine-Badge-root {
+     font-size: 0.9rem !important;
+  }
+}
