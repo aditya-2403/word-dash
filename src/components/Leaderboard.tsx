@@ -39,8 +39,11 @@ export function Leaderboard({ roomState, roomId, playerId }: LeaderboardProps) {
      
      if (secondsLeft === 0 && isHost && !isGenerating) {
         if ((roomState.round || 0) >= 10) {
-           // Proceed to absolute final-results
-           update(ref(db, `rooms/${roomId}`), { state: 'final-results' });
+           // Proceed to absolute final-results and wipe the chat messages for privacy
+           update(ref(db, `rooms/${roomId}`), { 
+               state: 'final-results',
+               messages: null 
+           });
         } else {
            // Seamlessly trigger AI again and push state back into 'playing'
            handleNextRoundAuto();

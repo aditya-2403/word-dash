@@ -20,8 +20,10 @@ export function HomeScreen({ onJoin }: { onJoin: (playerId: string, roomId: stri
                  const now = Date.now();
                  for (const [rId, data] of Object.entries(rooms)) {
                      const typedData = data as any;
-                     // 1-day threshold (24 hours)
-                     if (typedData.createdAt && now - typedData.createdAt > 24 * 60 * 60 * 1000) {
+                     // Delete room if no active players OR if it's over 24 hours old
+                     if (!typedData.players || Object.keys(typedData.players).length === 0) {
+                         await remove(ref(db, `rooms/${rId}`));
+                     } else if (typedData.createdAt && now - typedData.createdAt > 24 * 60 * 60 * 1000) {
                          await remove(ref(db, `rooms/${rId}`));
                      }
                  }

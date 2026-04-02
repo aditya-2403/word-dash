@@ -58,6 +58,9 @@ export const audioEngine = {
     playTick: () => playTone(1200, 'square', 0.05, 0.02),
     playWarningTick: () => playTone(600, 'square', 0.1, 0.05),
 
+    // Notifications
+    playChatTick: () => playTone(1500, 'sine', 0.1, 0.1),
+
     // Win
     playFanfare: () => {
         playTone(400, 'square', 0.2, 0.1);

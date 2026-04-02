@@ -14,6 +14,15 @@ export interface CurrentQuestion {
   timerEnd: number;
 }
 
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  avatar?: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface RoomState {
   createdAt?: number;
   hostId: string;
@@ -23,4 +32,5 @@ export interface RoomState {
   currentQuestion?: CurrentQuestion;
   players: Record<string, Player>;
   round?: number;
+  messages?: Record<string, ChatMessage>;
 }

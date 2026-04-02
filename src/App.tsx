@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MantineProvider, Container, Box, Text, ActionIcon } from '@mantine/core';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, onDisconnect } from 'firebase/database';
 import { db } from './firebase';
 import { RoomState } from './types';
 import { CATEGORIES, CategoryKey } from './utils/constants';
@@ -10,6 +10,7 @@ import { Lobby } from './components/Lobby';
 import { GameLoop } from './components/GameLoop';
 import { Leaderboard } from './components/Leaderboard';
 import { FinalResults } from './components/FinalResults';
+import { ChatBox } from './components/ChatBox';
 import { isMuted, setMuted } from './utils/audio';
 import { IconVolume, IconVolumeOff } from '@tabler/icons-react';
 
@@ -35,6 +36,17 @@ export default function App() {
     });
     return () => unsubscribe();
   }, [roomId]);
+
+  useEffect(() => {
+    if (!roomId || !playerId) return;
+    const playerRef = ref(db, `rooms/${roomId}/players/${playerId}`);
+    const onDisconnectRef = onDisconnect(playerRef);
+    onDisconnectRef.remove(); // Auto-remove player from room on tab close
+
+    return () => {
+       onDisconnectRef.cancel(); // Clean up the hook if manually leaving without tab close
+    };
+  }, [roomId, playerId]);
 
   useEffect(() => {
      // Explicit Kick / Banishment Detonator
@@ -117,6 +129,10 @@ export default function App() {
             </Text>
          </Box>
       </Container>
+      
+      {roomState && roomState.state !== 'final-results' && playerId && (
+          <ChatBox roomState={roomState} roomId={roomId} playerId={playerId} />
+      )}
     </MantineProvider>
   );
 }
