@@ -8,11 +8,28 @@ import { audioEngine } from '../utils/audio';
 
 export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState, roomId: string, playerId: string }) {
   const [inputVal, setInputVal] = useState('');
+  const [isError, setIsError] = useState(false);
   const [timeLeft, setTimeLeft] = useState(CONSTANTS.ROUND_TIME_MS / 1000);
+  const [revealSequence, setRevealSequence] = useState<number[]>([]);
   
   const question = roomState.currentQuestion;
   const isHost = roomState.hostId === playerId;
   const me = roomState.players[playerId];
+
+  // Generate randomized reveal sequence on question change
+  useEffect(() => {
+     if (question?.answer) {
+        const len = question.answer.length;
+        const indices = Array.from({ length: len }, (_, i) => i);
+        // Fisher-Yates shuffle
+        for (let i = len - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+        setRevealSequence(indices);
+        setInputVal('');
+     }
+  }, [question?.answer]);
 
   useEffect(() => {
     if (!question) return;
@@ -34,11 +51,15 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
   }, [question, roomState.players, isHost, roomId, roomState.state]);
 
   const handleChange = async (val: string) => {
-     setInputVal(val);
+     const upperVal = val.toUpperCase();
+     setInputVal(upperVal); 
      
      if (me.hasAnswered || !question) return;
 
-     if (val.trim().toLowerCase() === question.answer.toLowerCase()) {
+     const cleanVal = upperVal.trim().toLowerCase();
+     const cleanAnswer = question.answer.toLowerCase();
+
+     if (cleanVal === cleanAnswer) {
         audioEngine.playCorrect();
         const alreadyAnsweredCount = Object.values(roomState.players).filter(p => p.hasAnswered).length;
         let points = CONSTANTS.SCORING.DEFAULT;
@@ -49,16 +70,38 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
            score: me.score + points,
            hasAnswered: true
         });
+     } else if (cleanVal.length >= cleanAnswer.length) {
+        // Only trigger the error shake/buzz if they fully typed a word of the answer's length
+        if (timeLeft > 0) {
+            audioEngine.playBuzz();
+            setIsError(true);
+            setTimeout(() => setIsError(false), 400);
+        }
      } else {
-        // Only buzz if time isn't up
+        // Normal typing feel
         if (timeLeft > 0) audioEngine.playPop();
      }
   };
 
+  const totalTime = CONSTANTS.ROUND_TIME_MS / 1000;
+  // Calculate how many characters to reveal based on time passed. Keep at least 1 hidden unless time's up.
+  const timeRatio = (totalTime - timeLeft) / totalTime;
+  const maxToReveal = Math.max(0, (question?.answer.length || 0) - 1);
+  const numberRevealed = timeLeft === 0 ? (question?.answer.length || 0) : Math.floor(timeRatio * maxToReveal);
+
+  const displayWord = question?.answer.split('').map((char, index) => {
+     if (char === ' ') return '  ';
+     const sequenceIndex = revealSequence.indexOf(index);
+     if (sequenceIndex !== -1 && sequenceIndex < numberRevealed) {
+        return char.toUpperCase();
+     }
+     return '_';
+  }).join(' ');
+
   return (
     <Grid gutter="xl" className="animated-panel">
        <Grid.Col span={{ base: 12, md: 8 }}>
-         <div className="io-panel" style={{ height: '350px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+         <div className="io-panel" style={{ height: '380px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <Group justify="space-between" align="center">
                <Badge size="xl" color="cyan" style={{ border: '3px solid #1f2937', boxShadow: '0 4px 0 #1f2937' }}>Round {roomState.round}</Badge>
                <Text fw={900} size="xl" c={timeLeft < 6 ? 'red' : '#1f2937'}>
@@ -67,7 +110,7 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
             </Group>
             
             <Progress 
-               value={(timeLeft / (CONSTANTS.ROUND_TIME_MS / 1000)) * 100} 
+               value={(timeLeft / totalTime) * 100} 
                size="xl" 
                radius="xl" 
                color={timeLeft < 6 ? 'red' : 'green'} 
@@ -75,9 +118,13 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
                style={{ border: '3px solid #1f2937' }}
             />
 
-            <Title ta="center" order={2} style={{ fontSize: '2rem', lineHeight: 1.3, fontWeight: 900, textTransform: 'uppercase' }}>
+            <Title ta="center" order={2} style={{ fontSize: '1.8rem', lineHeight: 1.3, fontWeight: 900, textTransform: 'uppercase' }}>
                {question?.text}
             </Title>
+            
+            <Text ta="center" fw={900} style={{ letterSpacing: '8px', fontSize: '2.5rem', color: '#1f2937', wordWrap: 'break-word' }}>
+               {displayWord}
+            </Text>
 
             {me.isSpectator ? (
                <Badge color="gray" size="xl" style={{ border: '4px solid #1f2937', padding: '24px', fontSize: '1.4rem' }}>
@@ -86,7 +133,7 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
             ) : (
                <TextInput
                   size="xl"
-                  className="io-input"
+                  className={`io-input ${isError ? 'error-shake' : ''}`}
                   placeholder={me.hasAnswered ? "Correct! Waiting for others..." : "Type your answer..."}
                   value={inputVal}
                   onChange={(e) => handleChange(e.target.value)}
@@ -97,7 +144,8 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
                         textAlign: 'center', 
                         fontSize: '1.6rem', 
                         backgroundColor: me.hasAnswered ? '#86efac' : 'white',
-                        color: '#1f2937'
+                        color: '#1f2937',
+                        textTransform: 'uppercase'
                      } 
                   }}
                />
@@ -106,13 +154,13 @@ export function GameLoop({ roomState, roomId, playerId }: { roomState: RoomState
        </Grid.Col>
        
        <Grid.Col span={{ base: 12, md: 4 }}>
-         <div className="io-panel" style={{ minHeight: '350px' }}>
+         <div className="io-panel" style={{ minHeight: '380px' }}>
            <Title order={3} mb="xl" style={{ borderBottom: '3px solid #1f2937', paddingBottom: '10px', fontWeight: 900 }}>Competitors</Title>
            <Stack gap="sm">
              {Object.entries(roomState.players).map(([id, p]) => (
                 <Group key={id} justify="space-between" wrap="nowrap" style={{ background: '#f3f4f6', padding: '10px 14px', borderRadius: '12px', border: '3px solid #1f2937' }}>
                   <Text fw={800} td={p.hasAnswered ? 'line-through' : 'none'} opacity={p.hasAnswered ? 0.6 : 1} size="lg">
-                     {p.avatar || '🤖'} {p.name}
+                     <span className="avatar-breath" style={{ display: 'inline-block' }}>{p.avatar || '🤖'}</span> {p.name}
                   </Text>
                   <Badge size="lg" color={p.hasAnswered ? 'green' : 'gray'} style={{ border: '2px solid #1f2937' }}>{p.score} pts</Badge>
                 </Group>
