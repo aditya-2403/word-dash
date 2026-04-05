@@ -17,6 +17,7 @@ export function ChatBox({ roomState, roomId, playerId }: ChatBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [inputVal, setInputVal] = useState('');
+  const [preview, setPreview] = useState<{name: string, text: string} | null>(null);
   const viewport = useRef<HTMLDivElement>(null);
   
   const messages = roomState.messages ? Object.values(roomState.messages) : [];
@@ -27,21 +28,33 @@ export function ChatBox({ roomState, roomId, playerId }: ChatBoxProps) {
     if (isOpen && viewport.current) {
         viewport.current.scrollTo({ top: viewport.current.scrollHeight, behavior: 'smooth' });
         setUnreadCount(0); // clear unread when open
+        setPreview(null);
     }
     
-    // Play sound on new message if it wasn't sent by me (or just play it)
+    // Logic for incoming new messages
     if (messages.length > messageCountRef.current) {
          const newMessages = messages.slice(messageCountRef.current);
-         const hasOthersMessage = newMessages.some(m => m.senderId !== playerId);
-         if (hasOthersMessage) {
+         const otherMessages = newMessages.filter(m => m.senderId !== playerId);
+         
+         if (otherMessages.length > 0) {
               audioEngine.playChatTick();
               if (!isOpen) { 
-                  setUnreadCount(prev => prev + newMessages.filter(m => m.senderId !== playerId).length);
+                  if (roomState.state === 'lobby') {
+                      // Auto open in lobby
+                      setIsOpen(true);
+                      setUnreadCount(0);
+                  } else {
+                      // In game, show badge and preview toast
+                      setUnreadCount(prev => prev + otherMessages.length);
+                      const lastMsg = otherMessages[otherMessages.length - 1];
+                      setPreview({ name: lastMsg.senderName, text: decryptText(lastMsg.text) });
+                      setTimeout(() => setPreview(null), 4000);
+                  }
               }
          }
     }
     messageCountRef.current = messages.length;
-  }, [messages.length, isOpen, playerId]);
+  }, [messages.length, isOpen, playerId, roomState.state]);
 
   const handleSend = async (e?: React.FormEvent) => {
       e?.preventDefault();
@@ -137,22 +150,46 @@ export function ChatBox({ roomState, roomId, playerId }: ChatBoxProps) {
         </Transition>
 
         {!isOpen && (
-           <Indicator inline label={unreadCount} size={22} offset={7} color="red" disabled={unreadCount === 0} zIndex={1001}>
-              <ActionIcon
-                 color="blue"
-                 variant="filled"
-                 size={60}
-                 radius="xl"
-                 onClick={() => { setIsOpen(true); setUnreadCount(0); }}
-                 style={{ 
-                     boxShadow: '0 4px 0 #1f2937', 
-                     border: '3px solid #1f2937',
-                     position: 'relative' /* Removed absolute to work perfectly inside the fixed box without indicator breaking */
-                 }}
-              >
-                 <IconMessageCircle size={30} />
-              </ActionIcon>
-           </Indicator>
+           <Box style={{ position: 'relative' }}>
+              {preview && (
+                 <Paper 
+                    shadow="md" 
+                    p="xs" 
+                    className="animated-panel"
+                    style={{ 
+                       position: 'absolute', 
+                       bottom: '75px', 
+                       right: '0', 
+                       width: 'max-content', 
+                       maxWidth: '220px', 
+                       background: '#1f2937', 
+                       color: 'white', 
+                       border: '2px solid #facc15',
+                       borderRadius: '12px',
+                       zIndex: 1002
+                    }}
+                 >
+                    <Text size="xs" fw={800} c="yellow">{preview.name}</Text>
+                    <Text size="sm" style={{ wordBreak: 'break-word' }} truncate>{preview.text}</Text>
+                 </Paper>
+              )}
+
+              <Indicator inline label={unreadCount} size={22} offset={7} color="red" disabled={unreadCount === 0} zIndex={1001}>
+                 <ActionIcon
+                    color="blue"
+                    variant="filled"
+                    size={60}
+                    radius="xl"
+                    onClick={() => { setIsOpen(true); setUnreadCount(0); }}
+                    style={{ 
+                        boxShadow: '0 4px 0 #1f2937', 
+                        border: '3px solid #1f2937'
+                    }}
+                 >
+                    <IconMessageCircle size={30} />
+                 </ActionIcon>
+              </Indicator>
+           </Box>
         )}
       </Box>
   );

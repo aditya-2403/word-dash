@@ -21,7 +21,6 @@ body {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* Base button override (Mantine buttons injected with IO class) */
 .io-button {
   border: 3px solid #1f2937 !important;
   border-radius: 16px !important;
@@ -30,6 +29,8 @@ body {
   font-weight: 800 !important;
   text-transform: uppercase;
   letter-spacing: 1px;
+  cursor: pointer !important;
+  padding: 12px 24px !important;
 }
 
 .io-button:hover {
@@ -40,6 +41,19 @@ body {
 .io-button:active {
   transform: translateY(6px) !important;
   box-shadow: 0px 0px 0px #1f2937 !important;
+}
+
+/* Modal specific button overrides */
+.io-button-cancel {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+  margin: 0 5px;
+}
+
+.io-button-confirm {
+  background-color: #fca5a5 !important;
+  color: #1f2937 !important;
+  margin: 0 5px;
 }
 
 /* Inputs */
@@ -76,6 +90,27 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.error-shake input {
+  animation: shake 0.2s ease-in-out 3;
+  border-color: #ef4444 !important;
+  background-color: #fee2e2 !important;
+}
+
+@keyframes breath {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.1) translateY(-3px); }
+  100% { transform: scale(1) translateY(0); }
+}
+.avatar-breath {
+  display: inline-block;
+  animation: breath 3s ease-in-out infinite;
 }
 
 /* Mobile Responsiveness Heavy Scaling */

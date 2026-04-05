@@ -9,11 +9,16 @@ export interface TriviaQuestion {
   answer: string;
 }
 
-export async function generateQuestion(topicPrompt: string): Promise<TriviaQuestion[]> {
+export async function generateQuestion(topicPrompt: string, difficulty: 'Easy' | 'Medium' | 'Hard' = 'Easy'): Promise<TriviaQuestion[]> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   
-  const prompt = `Generate exactly 10 highly engaging, extremely easy, very short trivia questions strictly about ${topicPrompt}. 
-  The answer MUST be exactly ONE word for every single question. Make the questions so easy that a child could answer them contextually.
+  let difficultyContext = "";
+  if (difficulty === 'Easy') difficultyContext = "extremely easy, very short trivia questions. Make them so easy that a child could answer them contextually";
+  else if (difficulty === 'Medium') difficultyContext = "moderately challenging, well-known trivia questions that a teenager or average adult would know";
+  else if (difficulty === 'Hard') difficultyContext = "highly difficult, obscure, and tricky trivia questions meant for experts";
+
+  const prompt = `Generate exactly 10 highly engaging, ${difficultyContext} strictly about ${topicPrompt}. 
+  The answer MUST be exactly ONE word for every single question.
   Return the response STRICTLY as a raw JSON array of objects with exactly this schema (no markdown formatting, just the raw array):
   [
     {

@@ -6,6 +6,7 @@ import { db } from '../firebase';
 import { RoomState } from '../types';
 import { CONSTANTS, CATEGORIES } from '../utils/constants';
 import { generateQuestion } from '../services/gemini';
+import { Alerts } from '../utils/alerts';
 
 interface LobbyProps {
   roomState: RoomState;
@@ -25,7 +26,7 @@ export function Lobby({ roomState, roomId, playerId }: LobbyProps) {
     import('../utils/audio').then(a => a.audioEngine.playPop());
 
     const themeTarget = CATEGORIES[currentCategory]?.promptTheme || CATEGORIES.GENERAL.promptTheme;
-    const questionsArray = await generateQuestion(themeTarget);
+    const questionsArray = await generateQuestion(themeTarget, roomState.difficulty || 'Easy');
     
     const updates: Record<string, any> = {};
     Object.keys(roomState.players).forEach(pId => {
@@ -59,7 +60,8 @@ export function Lobby({ roomState, roomId, playerId }: LobbyProps) {
   }));
 
   const handleKick = async (idToKick: string, pName: string) => {
-     if (window.confirm(`Are you absolutely sure you want to kick ${pName}?`)) {
+     const result = await Alerts.confirmKick(pName);
+     if (result.isConfirmed) {
         await remove(ref(db, `rooms/${roomId}/players/${idToKick}`));
      }
   };
@@ -101,7 +103,7 @@ export function Lobby({ roomState, roomId, playerId }: LobbyProps) {
             {Object.entries(roomState.players).map(([id, p]) => (
               <List.Item key={id} style={{ color: '#1f2937' }}>
                  <Group justify="space-between" w="100%" pl="xs">
-                    <Text fw={800} size="xl">{p.avatar || '🤖'} {p.name}</Text>
+                    <Text fw={800} size="xl"><span className="avatar-breath" style={{ display: 'inline-block' }}>{p.avatar || '🤖'}</span> {p.name}</Text>
                     <Group>
                        {roomState.hostId === id && <Badge color="pink" variant="filled" style={{ border: '2px solid #1f2937' }}>Host</Badge>}
                        {isHost && id !== playerId && (

@@ -28,6 +28,7 @@ export interface RoomState {
   hostId: string;
   state: 'lobby' | 'playing' | 'results' | 'final-results';
   category?: CategoryKey;
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
   questionsData?: { text: string; answer: string }[];
   currentQuestion?: CurrentQuestion;
   players: Record<string, Player>;

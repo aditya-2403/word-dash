@@ -4,6 +4,7 @@ export let isMuted = false;
 
 export const setMuted = (muted: boolean) => {
    isMuted = muted;
+   syncBGM();
 };
 
 const getContext = () => {
@@ -67,4 +68,33 @@ export const audioEngine = {
         setTimeout(() => playTone(500, 'square', 0.2, 0.1), 200);
         setTimeout(() => playTone(600, 'square', 0.4, 0.1), 400);
     }
+};
+
+let bgmInterval: any = null;
+
+export const startBGM = () => {
+    if (bgmInterval || isMuted) return;
+    getContext(); // ensure context exists
+    const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // Arpeggio
+    let i = 0;
+    bgmInterval = setInterval(() => {
+        if (!isMuted) {
+             const bassFrequency = notes[i % notes.length] / 2;
+             playTone(bassFrequency, 'triangle', 0.15, 0.015);
+             if (i % 2 === 0) playTone(notes[(i+2) % notes.length], 'sine', 0.1, 0.01);
+        }
+        i++;
+    }, 450);
+};
+
+export const stopBGM = () => {
+    if (bgmInterval) {
+        clearInterval(bgmInterval);
+        bgmInterval = null;
+    }
+};
+
+export const syncBGM = () => {
+    if (isMuted) stopBGM();
+    else startBGM();
 };

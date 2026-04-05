@@ -17,7 +17,9 @@
     "canvas-confetti": "^1.9.4",
     "firebase": "^10.11.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sweetalert2": "^11.26.24",
+    "sweetalert2-react-content": "^5.1.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

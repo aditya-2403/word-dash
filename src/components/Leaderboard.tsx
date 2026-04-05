@@ -117,7 +117,7 @@ export function Leaderboard({ roomState, roomId, playerId }: LeaderboardProps) {
                    </Table.Td>
                    <Table.Td>
                       <Text fw={isWinner ? 900 : 800} size="xl">
-                         {p.avatar || '🤖'} {p.name} {id === playerId && <Text span c="pink">(You)</Text>}
+                         <span className="avatar-breath" style={{ display: 'inline-block' }}>{p.avatar || '🤖'}</span> {p.name} {id === playerId && <Text span c="pink">(You)</Text>}
                       </Text>
                    </Table.Td>
                    <Table.Td><Text fw={900} size="xl">{p.score}</Text></Table.Td>

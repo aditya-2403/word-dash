@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
-import { MantineProvider, Container, Box, Text, ActionIcon } from '@mantine/core';
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { MantineProvider, Container, Box, Text, ActionIcon, Loader } from '@mantine/core';
 import { ref, onValue, onDisconnect } from 'firebase/database';
 import { db } from './firebase';
 import { RoomState } from './types';
 import { CATEGORIES, CategoryKey } from './utils/constants';
 
-import { HomeScreen } from './components/HomeScreen';
-import { Lobby } from './components/Lobby';
-import { GameLoop } from './components/GameLoop';
-import { Leaderboard } from './components/Leaderboard';
-import { FinalResults } from './components/FinalResults';
-import { ChatBox } from './components/ChatBox';
-import { isMuted, setMuted } from './utils/audio';
+import { Alerts } from './utils/alerts';
+import { isMuted, setMuted, startBGM } from './utils/audio';
+
+// Lazy loaded components for code-splitting
+const HomeScreen = lazy(() => import('./components/HomeScreen').then(m => ({ default: m.HomeScreen })));
+const Lobby = lazy(() => import('./components/Lobby').then(m => ({ default: m.Lobby })));
+const GameLoop = lazy(() => import('./components/GameLoop').then(m => ({ default: m.GameLoop })));
+const Leaderboard = lazy(() => import('./components/Leaderboard').then(m => ({ default: m.Leaderboard })));
+const FinalResults = lazy(() => import('./components/FinalResults').then(m => ({ default: m.FinalResults })));
+const ChatBox = lazy(() => import('./components/ChatBox').then(m => ({ default: m.ChatBox })));
+const HelpBox = lazy(() => import('./components/HelpBox').then(m => ({ default: m.HelpBox })));
 import { IconVolume, IconVolumeOff } from '@tabler/icons-react';
 
 import '@mantine/core/styles.css';
@@ -52,14 +56,14 @@ export default function App() {
      // Explicit Kick / Banishment Detonator
      // If you are actively hooked to a room but your specific player node is missing -> KICK
      if (roomState && playerId && roomState.players && !roomState.players[playerId]) {
-         window.alert("You were kicked from the room by the Host.");
+         Alerts.error("Banished!", "You were kicked from the room by the Host.");
          setRoomId('');
          setPlayerId('');
          setRoomState(null);
      }
   }, [roomState, playerId]);
 
-  let currentView = <HomeScreen onJoin={(pId, rId) => { setPlayerId(pId); setRoomId(rId); }} />;
+  let currentView = <HomeScreen onJoin={(pId, rId) => { setPlayerId(pId); setRoomId(rId); startBGM(); }} />;
   let currentCategory = CATEGORIES.GENERAL;
 
   if (roomState) {
@@ -120,7 +124,9 @@ export default function App() {
          </Box>
          
          <div style={{ width: '100%', maxWidth: '800px', flexGrow: 1 }}>
-           {currentView}
+           <Suspense fallback={<Loader color="pink" size="xl" type="bars" style={{ display: 'block', margin: '100px auto' }} />}>
+             {currentView}
+           </Suspense>
          </div>
          
          <Box mt="xl" pt="xl">
@@ -130,9 +136,12 @@ export default function App() {
          </Box>
       </Container>
       
-      {roomState && roomState.state !== 'final-results' && playerId && (
-          <ChatBox roomState={roomState} roomId={roomId} playerId={playerId} />
-      )}
+      <Suspense fallback={null}>
+         {roomState && roomState.state !== 'final-results' && playerId && (
+             <ChatBox roomState={roomState} roomId={roomId} playerId={playerId} />
+         )}
+         <HelpBox />
+      </Suspense>
     </MantineProvider>
   );
 }
