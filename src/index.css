@@ -113,6 +113,25 @@ body {
   animation: breath 3s ease-in-out infinite;
 }
 
+.avatar-selector-btn {
+  font-size: 1.6rem !important;
+  padding: 8px !important;
+  border-radius: 12px !important;
+  border: 3px solid transparent !important;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  cursor: pointer !important;
+}
+.avatar-selector-btn:hover {
+  transform: scale(1.2) translateY(-5px) !important;
+  background-color: #f3f4f6;
+}
+.avatar-selector-btn[data-selected="true"] {
+  background-color: #facc15 !important;
+  border: 3px solid #1f2937 !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0px 4px 0px #1f2937 !important;
+}
+
 /* Mobile Responsiveness Heavy Scaling */
 @media (max-width: 768px) {
   .io-panel {

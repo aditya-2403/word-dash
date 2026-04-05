@@ -135,7 +135,7 @@ export function Leaderboard({ roomState, roomId, playerId }: LeaderboardProps) {
               </Group>
            ) : (
               <Text size="xl" fw={800} color={secondsLeft <= 2 ? 'red' : '#1f2937'}>
-                 Next round begins in: {secondsLeft}s
+                 {(roomState.round || 0) >= 10 ? 'Calculating final results...' : `Next round begins in: ${secondsLeft}s`}
               </Text>
            )}
         </Center>
