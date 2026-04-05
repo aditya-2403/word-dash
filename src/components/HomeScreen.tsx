@@ -114,16 +114,9 @@ export function HomeScreen({ onJoin }: { onJoin: (playerId: string, roomId: stri
            {EMOJIS.map(e => (
                <UnstyledButton 
                    key={e} 
+                   className="avatar-selector-btn"
                    onClick={() => setAvatar(e)}
-                   style={{ 
-                      fontSize: '2rem', 
-                      padding: '8px', 
-                      background: avatar === e ? '#facc15' : 'transparent',
-                      border: avatar === e ? '2px solid #1f2937' : '2px solid transparent',
-                      borderRadius: '12px',
-                      transition: 'transform 0.1s',
-                      transform: avatar === e ? 'scale(1.1)' : 'scale(1)'
-                   }}
+                   data-selected={avatar === e}
                >
                   {e}
                </UnstyledButton>
