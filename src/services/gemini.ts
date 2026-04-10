@@ -33,8 +33,11 @@ export async function generateQuestion(topicPrompt: string, difficulty: 'Easy' |
     const responseText = result.response.text().trim();
     const cleanedText = responseText.replace(/```json/i, '').replace(/```/g, '').trim();
     return JSON.parse(cleanedText);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Generation Error:", error);
+    if (error?.message?.includes("503") || error?.status === 503 || error?.message?.includes("high demand") || error?.message?.includes("High demand")) {
+      throw new Error("HighDemand");
+    }
     return Array(10).fill({ text: "System Default: Which planet is known as the Red Planet?", answer: "Mars" });
   }
 }

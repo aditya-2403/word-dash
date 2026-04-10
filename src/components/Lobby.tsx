@@ -26,7 +26,20 @@ export function Lobby({ roomState, roomId, playerId }: LobbyProps) {
     import('../utils/audio').then(a => a.audioEngine.playPop());
 
     const themeTarget = CATEGORIES[currentCategory]?.promptTheme || CATEGORIES.GENERAL.promptTheme;
-    const questionsArray = await generateQuestion(themeTarget, roomState.difficulty || 'Easy');
+    let questionsArray;
+    
+    try {
+      questionsArray = await generateQuestion(themeTarget, roomState.difficulty || 'Easy');
+    } catch (error: any) {
+      if (error.message === "HighDemand") {
+        setIsGenerating(false);
+        await Alerts.error("Servers At Capacity", "The AI model is currently experiencing high demand. Please try again later.");
+        window.location.reload();
+        return;
+      }
+      // Fail-safe default
+      questionsArray = Array(10).fill({ text: "System Default: Which planet is known as the Red Planet?", answer: "Mars" });
+    }
     
     const updates: Record<string, any> = {};
     Object.keys(roomState.players).forEach(pId => {
